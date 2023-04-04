@@ -81,6 +81,10 @@ Param
        [String]$InputCSV
 )
 
+#Powershell v7
+$PSDefaultParameterValues['Invoke-RestMethod:SkipHeaderValidation'] = $true
+$PSDefaultParameterValues['Invoke-WebRequest:SkipHeaderValidation'] = $true
+
 $Domains = Import-Csv -Path $InputCSV
 If(-Not ($Domains.domains.count -gt 0)){Write-Error "No domains found in input csv file, check heading is 'domains'";Break }
 
