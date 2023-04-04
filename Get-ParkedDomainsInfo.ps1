@@ -70,7 +70,8 @@ Find me on:
 
 [VERSION HISTORY / UPDATES]
 0.0.1 20220608 - JBines - Created the bare bones.
-0.0.1 20230112 - JBines - Updated for public release. 
+0.0.2 20230112 - JBines - Updated for public release. 
+0.0.3 20230112 - JBines - Added PowerShell 7 Support. 
 
 #>
 [CmdletBinding(DefaultParametersetName='None')] 
