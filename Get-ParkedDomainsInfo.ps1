@@ -1,4 +1,3 @@
-
 <#
 .SYNOPSIS
 This script will allow the BULK export of domain information such as M365 Tenant ID, SPF, DMARC, etc.
@@ -61,18 +60,18 @@ https://www.m3aawg.org/sites/default/files/m3aawg_parked_domains_bcp-2022-06.pdf
 Joshua Bines, Consultant
  
 [CONTRIBUTORS]
- 
+
+Michael Skitt,  Consultant
+
 Find me on:
 * Web:     https://theinformationstore.com.au
 * LinkedIn:  https://www.linkedin.com/in/joshua-bines-4451534
 * Github:    https://github.com/jbines
-
-
 [VERSION HISTORY / UPDATES]
 0.0.1 20220608 - JBines - Created the bare bones.
 0.0.2 20230112 - JBines - Updated for public release. 
 0.0.3 20230112 - JBines - Added PowerShell 7 Support. 
-
+0.0.4 20230413 - MSkitt - Added SPF and DMARC Output.
 #>
 [CmdletBinding(DefaultParametersetName='None')] 
 Param 
@@ -97,8 +96,13 @@ foreach($domain in $domains.domains){
     $dnsenabled = $null
     $dnsserver = $null
     $rootdomain = $null
+    $spfrecord = $null
+    $spfrecordString = $null
+    $spfEnforcement = $null
     $mxrecord = $null
     $dmarcrecord = $null
+    $dmarcrecordstring = $null
+    $DMARCEnforcement = $null
     $Response = $null
     $TenantId = $null
     $ApiUrl = $null
@@ -143,6 +147,7 @@ foreach($domain in $domains.domains){
         if($try.strings -like "v=spf1*"){
             
             $spfrecord = $true
+            $spfrecordString = $try.Strings
             switch -Wildcard ($try.strings | Where-Object{$_ -like "*all"}) {
                 '*`?all' { $spfEnforcement = "Neutral" }
                 '*~all' {  $spfEnforcement = "SoftFail" }
@@ -154,8 +159,10 @@ foreach($domain in $domains.domains){
         else{$spfrecord = $false;$spfEnforcement = "None"}
     }
     catch{$spfrecord = $false;$spfEnforcement = "None"}
+    Write-host "        SPF Record: $spfrecordString"
     Write-host "        SPF Record: $spfrecord"
     Write-host "        SPF Enforcement: $spfEnforcement"
+    
 
     #DMARC
     try{
@@ -163,6 +170,7 @@ foreach($domain in $domains.domains){
         if($try.strings -like "v=DMARC1*"){
 
             $dmarcrecord = $true
+            $dmarcrecordstring = $try.Strings
             switch -Wildcard ($try.strings | Where-Object{$_ -like "v=DMARC1*"}) {
                 '*p`=none*' { $DMARCEnforcement = "None" }
                 '*p`=quarantine*' {  $DMARCEnforcement = "Quarantine" }
@@ -173,6 +181,7 @@ foreach($domain in $domains.domains){
         Else{$dmarcrecord = $false;$DMARCEnforcement = "None"}
     }
     catch{$dmarcrecord = $false;$DMARCEnforcement = "None"}
+    Write-host "        Dmarc Record: $dmarcrecordstring"
     Write-host "        Dmarc Record: $dmarcrecord"
     Write-host "        Dmarc Enforcement: $DMARCEnforcement"
 
@@ -208,9 +217,11 @@ catch {
         dnshost = $dnsserver
         Website            = $rootdomain
         MX_Record           = $mxrecord
-        SPF_Record          = $spfrecord
+        SPF_Record          = $spfrecordString -join ""
+        SPF_Record_Found        = $spfrecord
         spfEnforcement = $spfEnforcement
-        DMARC_Record  = $dmarcrecord
+        DMARC_Record = $dmarcrecordstring -join ""
+        DMARC_Record_Found  = $dmarcrecord
         DMARCEnforcement = $DMARCEnforcement
         m365TenantId = $TenantId
     } 
